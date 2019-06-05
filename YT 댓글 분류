@@ -1,0 +1,51 @@
+from youtube_api import YoutubeDataApi
+import pandas as pd
+from nltk.tokenize import word_tokenize, sent_tokenize
+import re
+from nltk.corpus import stopwords
+import nltk
+api_key='AIzaSyAUkMDbrgFLrZ3Mg1WeU-JzMO1hkl_fJW8'
+yt=YoutubeDataApi(api_key)
+
+comments=yt.get_video_comments('AUmJwGV1Iq0')
+df=pd.DataFrame(comments)
+df
+
+
+#텍스트 소문자로 변환
+letters_lower=[]
+for i in df['text']:
+    a=i.lower()
+    letters_lower.append(a)
+df['text_lower']=letters_lower
+df['text_lower']=df['text_lower'].astype(str)
+
+# 미리 KEY USP 만듬
+feature=['clear','sound quality','meridian','bass','volume','bluetooth','app','pairing','lighting','color'
+        ,'design','waterproof','charger','price','weight','size','grip','battery','handle','jbl','sony']
+
+df_feature=pd.DataFrame(columns=feature)
+for m in range(len(df['text_lower'])):
+    sentences=sent_tokenize(df['text_lower'][m])
+    dictframe=dict.fromkeys(feature)
+    for u in feature:
+        moonzhang=[]
+        for s in sentences:
+            if u in s:
+                moonzhang.append(s)
+        if len(moonzhang)==0:
+            dictframe[u]=''
+        else:
+            dictframe[u]=moonzhang
+    df_feature.loc[m]= dictframe
+
+# 기존 df 와 Feature 분류 df Merge
+TB=pd.concat([df,df_feature],axis=1)
+
+
+
+import os
+os.chdir('C:/Users/A48267/Downloads') # 파일 경로 지정
+writer=pd.ExcelWriter('LinusTech(IRM).xlsx',engine='xlsxwriter') # 파일명 지정
+TB.to_excel(writer)
+writer.save()
